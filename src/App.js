@@ -1,11 +1,19 @@
 import { useEffect,useState, useRef } from 'react';
 //import logo from './logo.svg';
-//import './estilos.css';
+import './modal.css';
 import 'bootstrap/dist/css/bootstrap.css';
+
+function isValidDni(dni) {
+  // Regular expression for a simple email validation
+  const dniRegex = /^[0-9]{8}$/;
+  return dniRegex.test(dni);
+}
 
 function App() {
   
   const [pacientes,setPacientes] = useState([]);
+  const [pacienteActual,setPacienteActual] = useState(0);
+  const [mensajeErrorRegistro,setMensajeErrorRegistro] = useState("");
   localStorage.setItem("pacientes",JSON.stringify(pacientes));
 
   const nombreRef = useRef(null);
@@ -15,51 +23,73 @@ function App() {
   const sintomasRef = useRef(null);
   const generoRef = useRef(null);
 
-  const agendar = () =>{
+  const [openModalBorrar,setOpenModalBorrar] = useState(false);
+  const [openModalRegistro,setOpenModalRegistro] = useState(false);
 
-    const pacientesLocal = localStorage.getItem("pacientes");
-    const pacientesData = JSON.parse(pacientesLocal);
-
-    let gen = "";
-    switch(generoRef.current.value){
-      case "1":
-        gen="Masculino";
-        break;
-      case "2":
-        gen="Femenino";
-        break;
-    }
-
-    const datosPaciente = {
-      nombre: nombreRef.current.value,
-      fecha: fechaRef.current.value,
-      dni: dniRef.current.value,
-      hora: horaRef.current.value,
-      sintomas: sintomasRef.current.value,
-      genero: gen
-    }
-
-    setPacientes([...pacientesData,datosPaciente])
-    localStorage.setItem("pacientes",JSON.stringify(pacientes));
-
-    //alert(`Los pacientes ${JSON.stringify(pacientes)}`);
+  const toggleModalRegistro = () =>{
+    setOpenModalRegistro(!openModalRegistro)
   }
 
-  const borrar = (indice) =>{
-    //pacientes.splice(indice,1)
+  const toggleModal = () =>{
+    setOpenModalBorrar(!openModalBorrar)
+  }
+
+  const agendar = () =>{
+
+    if(nombreRef.current.value == "" || fechaRef.current.value == "" || dniRef.current.value == "" || horaRef.current.value == "" || sintomasRef.current.value == "" || generoRef.current.value == "--"){
+      toggleModalRegistro();
+      setMensajeErrorRegistro("Por favor completar todos los campos");
+    }else if(!isValidDni(dniRef.current.value)){
+      toggleModalRegistro();
+      setMensajeErrorRegistro("Ingrese un DNI valido")
+    }else{
+      const pacientesLocal = localStorage.getItem("pacientes");
+      const pacientesData = JSON.parse(pacientesLocal);
+
+      let gen = "";
+      switch(generoRef.current.value){
+        case "1":
+          gen="Masculino";
+          break;
+        case "2":
+          gen="Femenino";
+          break;
+      }
+
+      const datosPaciente = {
+        nombre: nombreRef.current.value,
+        fecha: fechaRef.current.value,
+        dni: dniRef.current.value,
+        hora: horaRef.current.value,
+        sintomas: sintomasRef.current.value,
+        genero: gen
+      }
+
+      setPacientes([...pacientesData,datosPaciente])
+      localStorage.setItem("pacientes",JSON.stringify(pacientes));
+    }
+
+  }
+
+  const abrirModalBorrar = (indice)=>{
+    setPacienteActual(indice);
+    toggleModal();
+  }
+
+  const borrar = () =>{
     const pacientesLocal = localStorage.getItem("pacientes");
     let pacientesData = JSON.parse(pacientesLocal);
-    pacientesData.splice(indice,1)
-    setPacientes(pacientesData)
+    pacientesData.splice(pacienteActual,1);
+    setPacientes(pacientesData);
     localStorage.setItem("pacientes",JSON.stringify(pacientesData));
-    return;
+    toggleModal();
   }
 
   return(
     <div className='container'>
       <div className='titulo h4 mt-5'style={{textAlign:"center"}} >FORMULARIO DE CITAS MÉDICAS</div>
       <div className='registro row align-content-center justify-content-center'>
-        <div className='cuadro col-md-8 row mt-2  justify-content-center' style={{height:"55vh",backgroundColor:"#383F4C",alignContent:"flex-start"}}>
+        <div className='cuadro col-md-8 row mt-2  justify-content-center p-4' style={{backgroundColor:"#383F4C",alignContent:"flex-start"}}>
           <div className='tituloCuadro col-md-12 mt-3 h4'style={{textAlign:"center",color:"white"}}>HACER UNA CITA</div>
           <div className='datosCuadro col-md-12 row mt-3'>
             <div className='col-md-5 mb-4'>
@@ -90,7 +120,7 @@ function App() {
             </div>
             <div className='col-md-5 mb-4'>
               <div className='sintomas form'>
-                <label style={{color:"white"}}>Sintomas</label>
+                <label style={{color:"white"}}>Síntomas</label>
                 <input ref={sintomasRef} type='text' class="form-control"  placeholder=""/>
               </div>
             </div>
@@ -121,11 +151,11 @@ function App() {
               <div className='col-md-6 row mt-1 p-2 row' style={{backgroundColor:"#383F4C",alignContent:"flex-start"}}>
                 <label style={{color:"white"}}>Nombre: <b>{item.nombre}</b></label>
                 <label style={{color:"white"}}>DNI: <b>{item.dni}</b></label>
-                <label style={{color:"white"}}>Sintomas:</label>
+                <label style={{color:"white"}}>Síntomas:</label>
                 <div className='col-md-12'>
                   <input type='text' class="form-control" disabled="true" value={item.sintomas}></input>
                 </div>
-                <label style={{color:"white"}}>Genero:</label>
+                <label style={{color:"white"}}>Género:</label>
                 <div className='col-md-12'>
                   <input type='text' class="form-control" disabled="true" value={item.genero}></input>
                 </div>
@@ -140,7 +170,7 @@ function App() {
                 <div className='botonCuadro col-md-12 justify-content-center row mt-3'>
                   <button type="button" class="btn btn-warning col-md-4" 
                   style={{color:"white",paddingLeft:"10px",paddingRight:"10px",fontWeight:"bold",backgroundColor:"orange"}}
-                  onClick={()=>{borrar(index)}}
+                  onClick={()=>{abrirModalBorrar(index)}}
                   >Borrar</button>
                 </div>
               </div>
@@ -148,6 +178,30 @@ function App() {
           })}
         </div>
       </div>
+      {openModalBorrar && (
+        <div className='modalCustom'>
+          <div className='overlayCustom'></div>
+          <div className='modal-contentCustom'>
+            <h3 style={{textAlign:'center',color:"#383F4C",fontWeight:"bold"}}>Borrar Cita</h3>
+            <h6>¿Está seguro de eliminar la cita seleccionada?</h6>
+            <div className='row' style={{justifyContent:"space-between"}}>
+              <div className='col-md-6 justify-content-center row'><button className='btn btn-primary' onClick={()=>{borrar()}}>Borrar</button></div>
+              <div className='col-md-6 justify-content-center row'><button className='btn btn-secondary' onClick={()=>{toggleModal()}}>Cancelar</button></div>
+            </div>
+          </div>
+        </div>
+      )}
+      {openModalRegistro && (
+        <div className='modalCustom'>
+          <div className='overlayCustom'></div>
+          <div className='modal-contentCustom'>
+            <h6 style={{textAlign:"center"}}>{mensajeErrorRegistro}</h6>
+            <div className='row' style={{justifyContent:"center"}}>
+              <div className='col-md-6 justify-content-center row mt-2'><button className='btn btn-primary' onClick={()=>{toggleModalRegistro()}}>Entendido</button></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
