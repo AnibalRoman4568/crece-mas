@@ -1,11 +1,11 @@
-import { useRef } from 'react';
+import { useEffect,useState, useRef } from 'react';
 //import logo from './logo.svg';
 //import './estilos.css';
 import 'bootstrap/dist/css/bootstrap.css';
 
 function App() {
   
-  let pacientes = [];
+  const [pacientes,setPacientes] = useState([]);
   localStorage.setItem("pacientes",JSON.stringify(pacientes));
 
   const nombreRef = useRef(null);
@@ -16,6 +16,9 @@ function App() {
   const generoRef = useRef(null);
 
   const agendar = () =>{
+
+    const pacientesLocal = localStorage.getItem("pacientes");
+    const pacientesData = JSON.parse(pacientesLocal);
 
     let gen = "";
     switch(generoRef.current.value){
@@ -36,7 +39,20 @@ function App() {
       genero: gen
     }
 
-    alert(`Se registra a ${JSON.stringify(datosPaciente)}`);
+    setPacientes([...pacientesData,datosPaciente])
+    localStorage.setItem("pacientes",JSON.stringify(pacientes));
+
+    //alert(`Los pacientes ${JSON.stringify(pacientes)}`);
+  }
+
+  const borrar = (indice) =>{
+    //pacientes.splice(indice,1)
+    const pacientesLocal = localStorage.getItem("pacientes");
+    let pacientesData = JSON.parse(pacientesLocal);
+    pacientesData.splice(indice,1)
+    setPacientes(pacientesData)
+    localStorage.setItem("pacientes",JSON.stringify(pacientesData));
+    return;
   }
 
   return(
@@ -98,7 +114,40 @@ function App() {
           </div>
         </div>
       </div>
-      <div className='resultados'></div>
+      <div className='resultados row align-content-center justify-content-center mt-3'>
+        <div className='col-md-8 row' style={{justifyContent:"space-between"}}>
+          {pacientes.map((item,index)=>{
+            return(
+              <div className='col-md-6 row mt-1 p-2 row' style={{backgroundColor:"#383F4C",alignContent:"flex-start"}}>
+                <label style={{color:"white"}}>Nombre: <b>{item.nombre}</b></label>
+                <label style={{color:"white"}}>DNI: <b>{item.dni}</b></label>
+                <label style={{color:"white"}}>Sintomas:</label>
+                <div className='col-md-12'>
+                  <input type='text' class="form-control" disabled="true" value={item.sintomas}></input>
+                </div>
+                <label style={{color:"white"}}>Genero:</label>
+                <div className='col-md-12'>
+                  <input type='text' class="form-control" disabled="true" value={item.genero}></input>
+                </div>
+                <label style={{color:"white"}}>Fecha:</label>
+                <div className='col-md-12'>
+                  <input type='text' class="form-control" disabled="true" value={item.fecha}></input>
+                </div>
+                <label style={{color:"white"}}>Hora:</label>
+                <div className='col-md-12'>
+                  <input type='text' class="form-control" disabled="true" value={item.hora}></input>
+                </div>
+                <div className='botonCuadro col-md-12 justify-content-center row mt-3'>
+                  <button type="button" class="btn btn-warning col-md-4" 
+                  style={{color:"white",paddingLeft:"10px",paddingRight:"10px",fontWeight:"bold",backgroundColor:"orange"}}
+                  onClick={()=>{borrar(index)}}
+                  >Borrar</button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
