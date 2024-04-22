@@ -11,9 +11,13 @@ function isValidDni(dni) {
 
 function App() {
   
+  const fechaHoy = new Date();
+  const strFechaHoy = fechaHoy.getFullYear() + "-" + (String(fechaHoy.getMonth()+1).padStart(2,'0')) +"-"+fechaHoy.getDate()
+
   const [pacientes,setPacientes] = useState([]);
   const [pacienteActual,setPacienteActual] = useState(0);
   const [mensajeErrorRegistro,setMensajeErrorRegistro] = useState("");
+  
   localStorage.setItem("pacientes",JSON.stringify(pacientes));
 
   const nombreRef = useRef(null);
@@ -25,6 +29,7 @@ function App() {
 
   const [openModalBorrar,setOpenModalBorrar] = useState(false);
   const [openModalRegistro,setOpenModalRegistro] = useState(false);
+  const [openModalEditar,setOpenModalEditar]=useState(false);
 
   const toggleModalRegistro = () =>{
     setOpenModalRegistro(!openModalRegistro)
@@ -35,7 +40,7 @@ function App() {
   }
 
   const agendar = () =>{
-
+    
     if(nombreRef.current.value == "" || fechaRef.current.value == "" || dniRef.current.value == "" || horaRef.current.value == "" || sintomasRef.current.value == "" || generoRef.current.value == "--"){
       toggleModalRegistro();
       setMensajeErrorRegistro("Por favor completar todos los campos");
@@ -90,7 +95,7 @@ function App() {
       <div className='titulo h4 mt-5'style={{textAlign:"center"}} >FORMULARIO DE CITAS MÉDICAS</div>
       <div className='registro row align-content-center justify-content-center'>
         <div className='cuadro col-md-8 row mt-2  justify-content-center p-4' style={{backgroundColor:"#383F4C",alignContent:"flex-start"}}>
-          <div className='tituloCuadro col-md-12 mt-3 h4'style={{textAlign:"center",color:"white"}}>HACER UNA CITA</div>
+          <div className='tituloCuadro col-md-12 mt-2 h4'style={{textAlign:"center",color:"white"}}>HACER UNA CITA</div>
           <div className='datosCuadro col-md-12 row mt-3'>
             <div className='col-md-5 mb-4'>
               <div className='nombre form'>
@@ -102,7 +107,7 @@ function App() {
             <div className='col-md-5 mb-4'>
               <div className='fecha form'>
                 <label style={{color:"white"}}>Seleccionar fecha</label>
-                <input ref={fechaRef} type='date' class="form-control" />   
+                <input ref={fechaRef} type='date' min={strFechaHoy} class="form-control" />   
               </div>
             </div>
             <div className='col-md-5 mb-4'>
@@ -202,6 +207,7 @@ function App() {
           </div>
         </div>
       )}
+
     </div>
   )
 }
